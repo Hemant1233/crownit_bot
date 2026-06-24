@@ -1,8 +1,7 @@
-
 #!/usr/bin/env python3
 """
-Crownit Complete Automation Telegram Bot
-All features included - Phone, OTP, Surveys, Rewards, Redemption
+Crownit Automation Bot - Web Service Version
+Deploy on Render Web Service (FREE Tier)
 """
 
 import os
@@ -27,7 +26,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Bot token
+# Bot token from environment variable
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '8575561951:AAHC8G5vGG24_v_W9sslfU38pQdVt0G8GMA')
 
 # Data pools
@@ -36,7 +35,7 @@ INDIAN_MALE = [
     "Sanjay", "Anil", "Sunil", "Manish", "Rahul", "Arun", "Nitin",
     "Pradeep", "Vikram", "Karan", "Rohan", "Aditya", "Ajay", "Vivek",
     "Sachin", "Gaurav", "Harsh", "Ravi", "Mohan", "Shyam", "Anand",
-    "Prakash", "Narendra", "Dinesh", "Mahesh", "Suresh", "Ramesh"
+    "Prakash", "Narendra", "Dinesh", "Mahesh"
 ]
 
 INDIAN_FEMALE = [
@@ -494,7 +493,7 @@ class CrownitAutomation:
             survey_id = None
             if surveys:
                 survey_taken = False
-                for survey in surveys[:3]:  # Try up to 3 surveys
+                for survey in surveys[:3]:
                     survey_id = self.take_survey(survey)
                     if survey_id:
                         survey_taken = True
@@ -568,7 +567,8 @@ class CrownitAutomation:
         
         return dashboard
 
-# Telegram Bot Handlers
+# ==================== TELEGRAM BOT HANDLERS ====================
+
 user_data = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -579,8 +579,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🚀 Start Automation", callback_data='start_bot')],
         [InlineKeyboardButton("📊 Check Status", callback_data='status')],
-        [InlineKeyboardButton("ℹ️ Help / Guide", callback_data='help')],
-        [InlineKeyboardButton("📢 Channel", url='https://t.me/UPIRefeerBot')]
+        [InlineKeyboardButton("ℹ️ Help / Guide", callback_data='help')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
@@ -603,8 +602,6 @@ I will help you automate Crownit tasks automatically!
 • Auto survey completion
 • Scratch card claiming
 • Reward redemption
-
-📢 *Join our channel:* @UPIRefeerBot
 
 Click the button below to start!
 """
@@ -660,8 +657,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• Survey automation\n"
             "• Reward claiming\n"
             "• Voucher redemption\n\n"
-            "🔹 *Support:*\n"
-            "Join our channel: @UPIRefeerBot\n\n"
             "Made with ❤️ for Crownit",
             parse_mode='Markdown'
         )
@@ -758,8 +753,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         processing_msg = await update.message.reply_text(
             "⏳ Processing your request...\n"
             "This may take 2-3 minutes.\n\n"
-            "⏳ Please wait while I complete all tasks...\n"
-            "Don't send any messages during this time."
+            "⏳ Please wait while I complete all tasks..."
         )
         
         try:
@@ -795,6 +789,8 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Send /start to try again."
         )
 
+# ==================== MAIN ====================
+
 def main():
     """Main entry point"""
     # Create application
@@ -806,14 +802,17 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     application.add_error_handler(error_handler)
     
-    # Start bot
-    print("🤖 Crownit Bot is starting...")
+    # For Render Web Service
+    PORT = int(os.environ.get('PORT', 10000))
+    
+    print(f"🤖 Crownit Bot is starting on port {PORT}...")
     print(f"Bot token: {BOT_TOKEN[:20]}...")
     
-    # Start polling
-    application.run_polling(
-        allowed_updates=Update.ALL_TYPES,
-        drop_pending_updates=True
+    # Use webhook for web service
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        webhook_url=f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}"
     )
 
 if __name__ == "__main__":
