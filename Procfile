@@ -1,1 +1,1 @@
-worker: python crownit_bot.py
+web: gunicorn crownit_bot:app
